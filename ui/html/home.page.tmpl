@@ -8,13 +8,13 @@
     <table>
         <tr>
             <th>Title</th>
-            <th>Created</th>
+            <th>CreatedAt</th>
             <th>ID</th>
         </tr>
         {{range .Snippets}}
         <tr>
             <td><a href="/snippet/{{.ID}}">{{.Title}}</a> </td>
-            <td>{{humanDate .Created}}</td>
+            <td>{{humanDate .CreatedAt}}</td>
             <td>#{{.ID}}</td>
         </tr>
         {{end}}

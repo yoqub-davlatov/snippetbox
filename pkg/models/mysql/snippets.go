@@ -39,7 +39,7 @@ func (m *SnippetModel) Get(id int) (*models.Snippet, error) {
 
 	s := &models.Snippet{}
 
-	err := m.DB.QueryRow(stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	err := m.DB.QueryRow(stmt, id).Scan(&s.ID, &s.Title, &s.Content, &s.CreatedAt, &s.Expires)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, models.ErrNoRecord
@@ -68,7 +68,7 @@ func (m *SnippetModel) Latest() ([]*models.Snippet, error) {
 	snippets := []*models.Snippet{}
 	for rows.Next() {
 		s := &models.Snippet{}
-		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+		err = rows.Scan(&s.ID, &s.Title, &s.Content, &s.CreatedAt, &s.Expires)
 		if err != nil {
 			return nil, err
 		}
