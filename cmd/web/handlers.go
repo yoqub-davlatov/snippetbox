@@ -10,6 +10,11 @@ import (
 	"github.com/yoqub-davlatov/snippetbox/pkg/models"
 )
 
+const (
+	flashSessionKey               = "flash"
+	authenticatedUserIDSessionKey = "authenticatedUserID"
+)
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippets.Latest()
 	if err != nil {
@@ -71,7 +76,7 @@ func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.session.Put(r, "flash", "Snippet successfully created!")
+	app.session.Put(r, flashSessionKey, "Snippet successfully created!")
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/%d", id), http.StatusSeeOther)
 }
@@ -112,7 +117,7 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.session.Put(r, "flash", "Your signup was successful. Please log in.")
+	app.session.Put(r, flashSessionKey, "Your signup was successful. Please log in.")
 
 	http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
@@ -143,11 +148,15 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	app.session.Put(r, "authenticatedUserID", id)
+	app.session.Put(r, authenticatedUserIDSessionKey, id)
 
 	http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)
 }
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Logout the user...")
+	app.session.Remove(r, authenticatedUserIDSessionKey)
+
+	app.session.Put(r, flashSessionKey, "You've been logged out successfully!")
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
