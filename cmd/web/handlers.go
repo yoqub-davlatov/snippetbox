@@ -15,6 +15,10 @@ const (
 	authenticatedUserIDSessionKey = "authenticatedUserID"
 )
 
+func ping(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte("OK"))
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippets.Latest()
 	if err != nil {

@@ -10,10 +10,18 @@ import (
 	"github.com/yoqub-davlatov/snippetbox/pkg/models"
 )
 
+const (
+	headerXSSProtection      = "X-XSS-Protection"
+	headerXSSProtectionValue = "1; mode=block"
+
+	headerFrameOptions      = "X-Frame-Options"
+	headerFrameOptionsValue = "deny"
+)
+
 func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-XSS-Protection", "1; mode=block")
-		w.Header().Set("X-Frame-Options", "deny")
+		w.Header().Set(headerXSSProtection, headerXSSProtectionValue)
+		w.Header().Set(headerFrameOptions, headerFrameOptionsValue)
 
 		next.ServeHTTP(w, r)
 	})

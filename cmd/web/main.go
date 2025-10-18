@@ -12,6 +12,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/golangcollege/sessions"
+	"github.com/yoqub-davlatov/snippetbox/pkg/models"
 	"github.com/yoqub-davlatov/snippetbox/pkg/models/mysql"
 )
 
@@ -21,12 +22,24 @@ const (
 	contextKeyIsAuthenticated = contextKey("isAuthenticated")
 )
 
+type snippetsDB interface {
+	Insert(string, string, string) (int, error)
+	Get(int) (*models.Snippet, error)
+	Latest() ([]*models.Snippet, error)
+}
+
+type usersDB interface {
+	Insert(string, string, string) error
+	Authenticate(string, string) (int, error)
+	Get(int) (*models.User, error)
+}
+
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
 	session       *sessions.Session
-	snippets      *mysql.SnippetModel
-	users         *mysql.UserModel
+	snippets      snippetsDB
+	users         usersDB
 	templateCache map[string]*template.Template
 }
 

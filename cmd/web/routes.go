@@ -15,6 +15,9 @@ func (app *application) routes() http.Handler {
 
 	mux := pat.New()
 
+	// ping handler
+	mux.Get("/ping", http.HandlerFunc(ping))
+
 	// home page
 	mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
 
