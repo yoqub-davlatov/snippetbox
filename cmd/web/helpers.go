@@ -55,5 +55,6 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 }
 
 func (app *application) isAuthenticated(r *http.Request) bool {
-	return app.session.Exists(r, authenticatedUserIDSessionKey)
+	isAuthenticated, ok := r.Context().Value(contextKeyIsAuthenticated).(bool)
+	return ok && isAuthenticated
 }
