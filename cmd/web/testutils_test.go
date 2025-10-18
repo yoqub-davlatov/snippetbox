@@ -1,12 +1,16 @@
 package main
 
 import (
+	"html"
 	"io"
 	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
+	"net/url"
 	"os"
+	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +18,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/yoqub-davlatov/snippetbox/pkg/models/mock"
 )
+
+var csrfTokenRX = regexp.MustCompile(`<input type='hidden' name='csrf_token' value='(.+)'>`)
 
 type testServer struct {
 	*httptest.Server
@@ -36,14 +42,13 @@ func newTestApplication(t *testing.T) *application {
 	session.Lifetime = 12 * time.Hour
 	session.Secure = true
 
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
 	return &application{
-		errorLog:      errorLog,
-		infoLog:       infoLog,
-		session:       session,
+		// errorLog:      log.New(io.Discard, "", 0),
+		// infoLog:       log.New(io.Discard, "", 0),
+		infoLog:       log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		errorLog:      log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
 		templateCache: templateCache,
+		session:       session,
 		users:         &mock.UserModel{},
 		snippets:      &mock.SnippetModel{},
 	}
@@ -76,4 +81,32 @@ func (ts *testServer) get(t *testing.T, urlPath string) testServerResponse {
 		headers:    rs.Header,
 		body:       string(body),
 	}
+}
+
+func (ts *testServer) postForm(t *testing.T, urlPath string, form url.Values) testServerResponse {
+	req, err := http.NewRequest(http.MethodPost, ts.URL+urlPath, strings.NewReader(form.Encode()))
+	require.NoError(t, err)
+
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+
+	rs, err := ts.Client().Do(req)
+	require.NoError(t, err)
+
+	defer rs.Body.Close()
+	body, err := io.ReadAll(rs.Body)
+	require.NoError(t, err)
+
+	return testServerResponse{
+		statusCode: rs.StatusCode,
+		headers:    rs.Header,
+		body:       string(body),
+	}
+}
+
+func extractCSRFToken(t *testing.T, body []byte) string {
+	matches := csrfTokenRX.FindSubmatch(body)
+	require.GreaterOrEqual(t, len(matches), 2)
+
+	return html.UnescapeString(string(matches[1]))
 }
